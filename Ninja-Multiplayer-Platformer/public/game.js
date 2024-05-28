@@ -7,18 +7,18 @@ socket.on('message', (message) => {
     messagesDiv.appendChild(newMessage);
 });
 
-socket.on('createSquare', (data) => {
-    createSquare(data.id);
-});
-
 function createRoom() {
+    const name = document.getElementById('nameInput').value;
     const room = document.getElementById('roomInput').value;
-    socket.emit('createRoom', room);
+    const password = document.getElementById('passwordInput').value;
+    socket.emit('createRoom', { name, room, password });
 }
 
 function joinRoom() {
+    const name = document.getElementById('nameInput').value;
     const room = document.getElementById('roomInput').value;
-    socket.emit('joinRoom', room);
+    const password = document.getElementById('passwordInput').value;
+    socket.emit('joinRoom', { name, room, password });
 }
 
 const config = {
