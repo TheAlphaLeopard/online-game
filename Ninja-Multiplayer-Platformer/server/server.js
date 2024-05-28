@@ -1,30 +1,32 @@
 const express = require('express');
 const http = require('http');
-const socketIo = require('socket.io');
+const { Server } = require('socket.io');
 const { exec } = require('child_process');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = new Server(server);
 
 // Serve static files using http-server
 exec('http-server -p 8080 -c-1 Ninja-Multiplayer-Platformer/public');
 
 io.on('connection', (socket) => {
-    console.log('New client connected');
+    console.log('New client connected:', socket.id);
 
     socket.on('createRoom', (room) => {
         socket.join(room);
         console.log(`Room created: ${room}`);
+        socket.emit('message', `You created room: ${room}`);
     });
 
     socket.on('joinRoom', (room) => {
         socket.join(room);
         console.log(`Joined room: ${room}`);
+        socket.emit('message', `You joined room: ${room}`);
     });
 
     socket.on('disconnect', () => {
-        console.log('Client disconnected');
+        console.log('Client disconnected:', socket.id);
     });
 });
 

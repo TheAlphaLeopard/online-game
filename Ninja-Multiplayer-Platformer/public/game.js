@@ -1,5 +1,12 @@
 const socket = io();
 
+socket.on('message', (message) => {
+    const messagesDiv = document.getElementById('messages');
+    const newMessage = document.createElement('p');
+    newMessage.textContent = message;
+    messagesDiv.appendChild(newMessage);
+});
+
 function createRoom() {
     const room = document.getElementById('roomInput').value;
     socket.emit('createRoom', room);
