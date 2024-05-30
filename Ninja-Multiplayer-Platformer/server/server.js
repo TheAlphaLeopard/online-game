@@ -24,7 +24,7 @@ io.on('connection', (socket) => {
         }
         rooms[room] = { password, players: [{ id: socket.id, name, x: 0, y: 0 }] };
         socket.join(room);
-        console.log(`Room created: ${room}`);
+        socket.emit('message', `Room created: ${room}`);
         io.to(room).emit('updatePlayers', rooms[room].players);
     });
 
@@ -41,10 +41,14 @@ io.on('connection', (socket) => {
             socket.emit('message', 'Room is full');
             return;
         }
+        if (rooms[room].players.some(player => player.id === socket.id)) {
+            socket.emit('message', 'You are already in the room');
+            return;
+        }
         const emptySpot = findEmptySpot(rooms[room].players);
         rooms[room].players.push({ id: socket.id, name, ...emptySpot });
         socket.join(room);
-        console.log(`Joined room: ${room}`);
+        socket.emit('message', `Joined room: ${room}`);
         io.to(room).emit('updatePlayers', rooms[room].players);
     });
 

@@ -1,10 +1,8 @@
 const socket = io();
+let currentRoom = null;
 
 socket.on('message', (message) => {
-    const messagesDiv = document.getElementById('messages');
-    const newMessage = document.createElement('p');
-    newMessage.textContent = message;
-    messagesDiv.appendChild(newMessage);
+    displayMessage(message);
 });
 
 socket.on('updatePlayers', (players) => {
@@ -15,14 +13,24 @@ function createRoom() {
     const name = document.getElementById('nameInput').value;
     const room = document.getElementById('roomInput').value;
     const password = document.getElementById('passwordInput').value;
-    socket.emit('createRoom', { name, room, password });
+    if (!currentRoom) {
+        socket.emit('createRoom', { name, room, password });
+        currentRoom = room;
+    } else {
+        displayMessage(`You are already in a room: ${currentRoom}`);
+    }
 }
 
 function joinRoom() {
     const name = document.getElementById('nameInput').value;
     const room = document.getElementById('roomInput').value;
     const password = document.getElementById('passwordInput').value;
-    socket.emit('joinRoom', { name, room, password });
+    if (!currentRoom) {
+        socket.emit('joinRoom', { name, room, password });
+        currentRoom = room;
+    } else {
+        displayMessage(`You are already in a room: ${currentRoom}`);
+    }
 }
 
 document.addEventListener('keydown', (event) => {
@@ -91,4 +99,19 @@ function updatePlayers(players) {
         playerGroup.add(square);
         playerGroup.add(text);
     });
+}
+
+let messageCounts = {};
+
+function displayMessage(message) {
+    const messagesDiv = document.getElementById('messages');
+    if (messageCounts[message]) {
+        messageCounts[message]++;
+    } else {
+        messageCounts[message] = 1;
+    }
+    const messagesArray = Object.entries(messageCounts).map(
+        ([msg, count]) => `${msg} x${count}`
+    );
+    messagesDiv.innerHTML = messagesArray.join('<br>');
 }
