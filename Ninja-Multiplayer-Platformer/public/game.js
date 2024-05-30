@@ -43,10 +43,12 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
+const GRID_SIZE = 3;
+
 const config = {
     type: Phaser.AUTO,
     width: 800,
-    height: 600,
+    height: 800,
     parent: 'gameContainer',
     physics: {
         default: 'arcade',
