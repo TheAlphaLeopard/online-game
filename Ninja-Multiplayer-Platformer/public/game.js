@@ -34,19 +34,19 @@ function joinRoom() {
 }
 
 document.addEventListener('keydown', (event) => {
-    const room = document.getElementById('roomInput').value;
+    if (!currentRoom) return;
     switch (event.key) {
         case 'ArrowLeft':
-            socket.emit('move', { room, direction: 'left' });
+            socket.emit('move', { room: currentRoom, direction: 'left' });
             break;
         case 'ArrowRight':
-            socket.emit('move', { room, direction: 'right' });
+            socket.emit('move', { room: currentRoom, direction: 'right' });
             break;
         case 'ArrowUp':
-            socket.emit('move', { room, direction: 'up' });
+            socket.emit('move', { room: currentRoom, direction: 'up' });
             break;
         case 'ArrowDown':
-            socket.emit('move', { room, direction: 'down' });
+            socket.emit('move', { room: currentRoom, direction: 'down' });
             break;
     }
 });
