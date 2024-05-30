@@ -7,6 +7,10 @@ socket.on('message', (message) => {
     messagesDiv.appendChild(newMessage);
 });
 
+socket.on('updatePlayers', (players) => {
+    updatePlayers(players);
+});
+
 function createRoom() {
     const name = document.getElementById('nameInput').value;
     const room = document.getElementById('roomInput').value;
@@ -20,6 +24,24 @@ function joinRoom() {
     const password = document.getElementById('passwordInput').value;
     socket.emit('joinRoom', { name, room, password });
 }
+
+document.addEventListener('keydown', (event) => {
+    const room = document.getElementById('roomInput').value;
+    switch (event.key) {
+        case 'ArrowLeft':
+            socket.emit('move', { room, direction: 'left' });
+            break;
+        case 'ArrowRight':
+            socket.emit('move', { room, direction: 'right' });
+            break;
+        case 'ArrowUp':
+            socket.emit('move', { room, direction: 'up' });
+            break;
+        case 'ArrowDown':
+            socket.emit('move', { room, direction: 'down' });
+            break;
+    }
+});
 
 const config = {
     type: Phaser.AUTO,
@@ -40,24 +62,30 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
+let playerGroup;
 
 function preload() {
     // Load assets if necessary
 }
 
 function create() {
-    // Initial game setup
+    playerGroup = this.add.group();
 }
 
 function update() {
     // Game logic
 }
 
-function createSquare(id) {
-    const size = 50;
-    const x = Math.random() * (game.config.width - size);
-    const y = Math.random() * (game.config.height - size);
-    const square = this.add.rectangle(x, y, size, size, 0x6666ff);
-    square.setData('id', id);
-    this.physics.add.existing(square);
+function updatePlayers(players) {
+    playerGroup.clear(true, true);
+    const size = game.config.width / GRID_SIZE;
+    players.forEach(player => {
+        const x = player.x * size + size / 2;
+        const y = player.y * size + size / 2;
+        const square = game.scene.scenes[0].add.rectangle(x, y, size - 10, size - 10, 0x6666ff);
+        const text = game.scene.scenes[0].add.text(x, y, player.name, { color: '#000' })
+            .setOrigin(0.5, 0.5);
+        playerGroup.add(square);
+        playerGroup.add(text);
+    });
 }
