@@ -33,8 +33,10 @@ function joinRoom() {
     }
 }
 
+let selectedSquare = null;
+
 document.addEventListener('keydown', (event) => {
-    if (!currentRoom) return;
+    if (!currentRoom || !selectedSquare) return;
     switch (event.key) {
         case 'ArrowLeft':
             socket.emit('move', { room: currentRoom, direction: 'left' });
@@ -93,9 +95,13 @@ function updatePlayers(players) {
     players.forEach(player => {
         const x = player.x * size + size / 2;
         const y = player.y * size + size / 2;
-        const square = game.scene.scenes[0].add.rectangle(x, y, size - 10, size - 10, 0x6666ff);
-        const text = game.scene.scenes[0].add.text(x, y, player.name, { color: '#000' })
-            .setOrigin(0.5, 0.5);
+        const square = game.scene.scenes[0].add.rectangle(x, y, size - 10, size - 10, 0x6666ff).setInteractive();
+        const text = game.scene.scenes[0].add.text(x, y, player.name, { color: '#000' }).setOrigin(0.5, 0.5);
+        
+        square.on('pointerdown', () => {
+            selectedSquare = player.id === socket.id ? square : null;
+        });
+
         playerGroup.add(square);
         playerGroup.add(text);
     });

@@ -41,8 +41,8 @@ io.on('connection', (socket) => {
             socket.emit('message', 'Room is full');
             return;
         }
-        if (rooms[room].players.some(player => player.id === socket.id)) {
-            socket.emit('message', 'You are already in the room');
+        if (rooms[room].players.some(player => player.id === socket.id || player.name === name)) {
+            socket.emit('message', 'Duplicate name or already in the room');
             return;
         }
         const emptySpot = findEmptySpot(rooms[room].players);
