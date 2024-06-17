@@ -25,11 +25,17 @@ function joinRoom() {
     const name = document.getElementById('nameInput').value;
     const room = document.getElementById('roomInput').value;
     const password = document.getElementById('passwordInput').value;
-    if (!currentRoom) {
-        socket.emit('joinRoom', { name, room, password });
-        currentRoom = room;
-    } else {
-        displayMessage(`You are already in a room: ${currentRoom}`);
+    if (currentRoom) {
+        leaveRoom();
+    }
+    socket.emit('joinRoom', { name, room, password });
+}
+
+function leaveRoom() {
+    if (currentRoom) {
+        socket.emit('leaveRoom', { room: currentRoom });
+        currentRoom = null;
+        displayMessage('Left the room');
     }
 }
 

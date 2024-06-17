@@ -57,6 +57,21 @@ io.on('connection', (socket) => {
         io.to(room).emit('updateMousePositions', rooms[room].players);
     });
 
+    socket.on('leaveRoom', ({ room }) => {
+        if (rooms[room]) {
+            const index = rooms[room].players.findIndex(p => p.id === socket.id);
+            if (index !== -1) {
+                rooms[room].players.splice(index, 1);
+                socket.leave(room);
+                io.to(room).emit('updateMousePositions', rooms[room].players);
+                if (rooms[room].players.length === 0) {
+                    delete rooms[room];
+                }
+                socket.emit('message', `Left room: ${room}`);
+            }
+        }
+    });
+
     socket.on('mouseMove', ({ room, x, y }) => {
         const player = rooms[room]?.players.find(p => p.id === socket.id);
         if (player) {
