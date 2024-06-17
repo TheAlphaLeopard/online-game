@@ -54,7 +54,6 @@ const config = {
 
 const game = new Phaser.Game(config);
 let playerGroup;
-let localPlayer = null;
 
 function preload() {
     // Load assets if necessary
@@ -78,9 +77,11 @@ function update() {
 function updateMousePositions(players) {
     playerGroup.clear(true, true);
     players.forEach(player => {
-        const circle = game.scene.scenes[0].add.circle(player.x, player.y, 10, 0x6666ff);
-        const text = game.scene.scenes[0].add.text(player.x, player.y - 15, player.name, { color: '#000' })
-            .setOrigin(0.5, 0.5);
+        const circle = game.scene.scenes[0].add.circle(player.x, player.y, 10, player.color);
+        const text = game.scene.scenes[0].add.text(player.x, player.y - 15, player.name, { fontSize: '16px' })
+            .setOrigin(0.5, 0.5)
+            .setStyle({ fill: '#808080' })
+            .setShadow(2, 2, '#ffffff', 2, true, true);
         playerGroup.add(circle);
         playerGroup.add(text);
     });
