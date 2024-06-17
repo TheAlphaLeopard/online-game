@@ -5,8 +5,8 @@ socket.on('message', (message) => {
     displayMessage(message);
 });
 
-socket.on('updatePlayers', (players) => {
-    updatePlayers(players);
+socket.on('updateMousePositions', (players) => {
+    updateMousePositions(players);
 });
 
 function createRoom() {
@@ -33,28 +33,6 @@ function joinRoom() {
     }
 }
 
-let selectedSquare = null;
-
-document.addEventListener('keydown', (event) => {
-    if (!currentRoom || !selectedSquare) return;
-    switch (event.key) {
-        case 'ArrowLeft':
-            socket.emit('move', { room: currentRoom, direction: 'left' });
-            break;
-        case 'ArrowRight':
-            socket.emit('move', { room: currentRoom, direction: 'right' });
-            break;
-        case 'ArrowUp':
-            socket.emit('move', { room: currentRoom, direction: 'up' });
-            break;
-        case 'ArrowDown':
-            socket.emit('move', { room: currentRoom, direction: 'down' });
-            break;
-    }
-});
-
-const GRID_SIZE = 3;
-
 const config = {
     type: Phaser.AUTO,
     width: 800,
@@ -76,6 +54,7 @@ const config = {
 
 const game = new Phaser.Game(config);
 let playerGroup;
+let localPlayer = null;
 
 function preload() {
     // Load assets if necessary
@@ -83,26 +62,26 @@ function preload() {
 
 function create() {
     playerGroup = this.add.group();
+
+    this.input.on('pointermove', (pointer) => {
+        if (currentRoom) {
+            const { x, y } = pointer;
+            socket.emit('mouseMove', { room: currentRoom, x, y });
+        }
+    });
 }
 
 function update() {
     // Game logic
 }
 
-function updatePlayers(players) {
+function updateMousePositions(players) {
     playerGroup.clear(true, true);
-    const size = game.config.width / GRID_SIZE;
     players.forEach(player => {
-        const x = player.x * size + size / 2;
-        const y = player.y * size + size / 2;
-        const square = game.scene.scenes[0].add.rectangle(x, y, size - 10, size - 10, 0x6666ff).setInteractive();
-        const text = game.scene.scenes[0].add.text(x, y, player.name, { color: '#000' }).setOrigin(0.5, 0.5);
-        
-        square.on('pointerdown', () => {
-            selectedSquare = player.id === socket.id ? square : null;
-        });
-
-        playerGroup.add(square);
+        const circle = game.scene.scenes[0].add.circle(player.x, player.y, 10, 0x6666ff);
+        const text = game.scene.scenes[0].add.text(player.x, player.y - 15, player.name, { color: '#000' })
+            .setOrigin(0.5, 0.5);
+        playerGroup.add(circle);
         playerGroup.add(text);
     });
 }

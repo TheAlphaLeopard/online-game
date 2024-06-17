@@ -11,9 +11,6 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 const rooms = {};
 
-const GRID_SIZE = 3;
-const MAX_PLAYERS = GRID_SIZE * GRID_SIZE;
-
 io.on('connection', (socket) => {
     console.log('New client connected:', socket.id);
 
@@ -25,7 +22,7 @@ io.on('connection', (socket) => {
         rooms[room] = { password, players: [{ id: socket.id, name, x: 0, y: 0 }] };
         socket.join(room);
         socket.emit('message', `Room created: ${room}`);
-        io.to(room).emit('updatePlayers', rooms[room].players);
+        io.to(room).emit('updateMousePositions', rooms[room].players);
     });
 
     socket.on('joinRoom', ({ name, room, password }) => {
@@ -37,44 +34,22 @@ io.on('connection', (socket) => {
             socket.emit('message', 'Incorrect password');
             return;
         }
-        if (rooms[room].players.length >= MAX_PLAYERS) {
-            socket.emit('message', 'Room is full');
+        if (rooms[room].players.some(player => player.name === name)) {
+            socket.emit('message', 'Name already taken in this room');
             return;
         }
-        if (rooms[room].players.some(player => player.id === socket.id || player.name === name)) {
-            socket.emit('message', 'Duplicate name or already in the room');
-            return;
-        }
-        const emptySpot = findEmptySpot(rooms[room].players);
-        rooms[room].players.push({ id: socket.id, name, ...emptySpot });
+        rooms[room].players.push({ id: socket.id, name, x: 0, y: 0 });
         socket.join(room);
         socket.emit('message', `Joined room: ${room}`);
-        io.to(room).emit('updatePlayers', rooms[room].players);
+        io.to(room).emit('updateMousePositions', rooms[room].players);
     });
 
-    socket.on('move', ({ room, direction }) => {
+    socket.on('mouseMove', ({ room, x, y }) => {
         const player = rooms[room]?.players.find(p => p.id === socket.id);
         if (player) {
-            const originalPosition = { x: player.x, y: player.y };
-            switch (direction) {
-                case 'left':
-                    player.x = Math.max(0, player.x - 1);
-                    break;
-                case 'right':
-                    player.x = Math.min(GRID_SIZE - 1, player.x + 1);
-                    break;
-                case 'up':
-                    player.y = Math.max(0, player.y - 1);
-                    break;
-                case 'down':
-                    player.y = Math.min(GRID_SIZE - 1, player.y + 1);
-                    break;
-            }
-            if (isOccupied(rooms[room].players, player.x, player.y)) {
-                player.x = originalPosition.x;
-                player.y = originalPosition.y;
-            }
-            io.to(room).emit('updatePlayers', rooms[room].players);
+            player.x = x;
+            player.y = y;
+            io.to(room).emit('updateMousePositions', rooms[room].players);
         }
     });
 
@@ -83,7 +58,7 @@ io.on('connection', (socket) => {
             const index = rooms[room].players.findIndex(p => p.id === socket.id);
             if (index !== -1) {
                 rooms[room].players.splice(index, 1);
-                io.to(room).emit('updatePlayers', rooms[room].players);
+                io.to(room).emit('updateMousePositions', rooms[room].players);
                 if (rooms[room].players.length === 0) {
                     delete rooms[room];
                 }
@@ -93,23 +68,6 @@ io.on('connection', (socket) => {
         console.log('Client disconnected:', socket.id);
     });
 });
-
-function findEmptySpot(players) {
-    const spots = Array.from({ length: GRID_SIZE }, (_, y) => 
-        Array.from({ length: GRID_SIZE }, (_, x) => ({ x, y })))
-        .flat();
-    for (const player of players) {
-        const index = spots.findIndex(spot => spot.x === player.x && spot.y === player.y);
-        if (index !== -1) {
-            spots.splice(index, 1);
-        }
-    }
-    return spots[0];
-}
-
-function isOccupied(players, x, y) {
-    return players.some(player => player.x === x && player.y === y);
-}
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Socket.io server running on port ${PORT}`));
